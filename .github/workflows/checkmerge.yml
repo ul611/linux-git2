@@ -1,0 +1,66 @@
+name: automerge
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - unlabeled
+      - synchronize
+      - opened
+      - edited
+      - ready_for_review
+      - reopened
+      - unlocked
+    paths:
+    - '*.py'
+  pull_request_review:
+    types:
+      - submitted
+  check_suite:
+    types:
+      - completed
+  status: {}
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup
+        uses: actions/checkout@v2
+        with:
+         ref: ${{github.event.pull_request.head.ref}}
+         repository: ${{github.event.pull_request.head.repo.full_name}}
+         fetch-depth: 0
+      - name: get changed files
+        id: getchfile
+        run: |
+          echo BASE SHA ${{ github.event.pull_request.base.sha }}
+          echo HEASD SHA ${{ github.event.pull_request.head.sha }}
+          echo SHA ${{ github.sha }}
+          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.event.pull_request.base.sha }} | xargs)"
+          echo ${{ steps.getchfile.outputs.files }}
+          #could try to decode what's encoded like
+          #"${description//'%'/'%25'}"
+          #"${description//$'\n'/'%0A'}"
+          #description="${description//$'\r'/'%0D'}"
+      - name: Create issue using REST API
+        run: |
+         curl --request POST \
+         --url https://api.github.com/repos/${{ github.repository }}/issues \
+         --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+         --header 'content-type: application/json' \
+         --data '{
+           "title": "Automated issue for commit: ${{ github.sha }}",
+           "body": "This issue was automatically created by the GitHub Action workflow **${{ github.workflow }}**. \n\n The commit hash was: _${{ github.sha }}_."
+          }'
+      - name: merge pull request
+        run: |
+          curl \
+          -X PUT \
+          -H "Accept: application/vnd.github.v3+json" \
+           --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          ${{ github.event.pull_request.url }}/merge \
+          -d '{"commit_title":"automerging"}'
+#      - name: automerge
+#        uses: pascalgn/automerge-action@v0.11.0
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
