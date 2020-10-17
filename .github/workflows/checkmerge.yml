@@ -89,9 +89,15 @@ jobs:
         run: |
           echo Running ./${{ github.event.pull_request.user.login }}.sh
           out=$(./${{ github.event.pull_request.user.login }}.sh)
-          [ $? -ne 0 ] && echo Could not run ./"${{ github.event.pull_request.user.login }}.sh" && exit 1
+          if [ $? -ne 0 ]; then 
+           echo Could not run ./"${{ github.event.pull_request.user.login }}.sh"
+           exit 1
+          fi
           echo Output:${out}
-          [ "$out" != "Hello pull-request" ] && echo Incorrect output $out && exit 1
+          if [ "$out" != "Hello pull-request" ]; then
+           echo Incorrect output $out
+           exit 1
+          fi
       - name: merge pull request
         run: |
           curl \
@@ -100,4 +106,3 @@ jobs:
            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
           ${{ github.event.pull_request.url }}/merge \
           -d '{"commit_title":"automerging pr ${{github.event.pull_request.number }} for ${{ github.event.pull_request.user.login }}" }'
-
