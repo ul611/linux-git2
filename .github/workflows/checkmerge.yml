@@ -31,19 +31,20 @@ jobs:
          fetch-depth: 0
       - name: check branch
         id: checkbranch
-        continue-on-error: true
+        continue-on-error: false
         run: |
-          echo HEAD REF ${{ github.event.pull_request.head.ref }}
-          if [ "${{ github.event.pull_request.head.ref }}" == "${{ github.event.pull_request.user.login }}" ]
+          echo Github nick ${{ github.event.pull_request.user.login }}
+          echo Branch ${{ github.event.pull_request.head.ref }}
+          if [ "${{ github.event.pull_request.head.ref }}" != "${{ github.event.pull_request.user.login }}" ]
           then
             echo "Branch name is not the same as github nick"
             exit 1
           fi
       - name: check title
         id: checktitle
-        continue-on-error: true
+        continue-on-error: false
         run: |
-          echo HEAD title ${{ github.event.pull_request.title }}
+          echo Title ${{ github.event.pull_request.title }}
           if [ "${{ github.event.pull_request.title }}" != "hw git2 ${{ github.event.pull_request.user.login }}" ]
           then
             echo "PR title is not hw git2 your_github_nick"
@@ -51,9 +52,9 @@ jobs:
           fi
       - name: check number of commits
         id: checkcommits
-        continue-on-error: true
+        continue-on-error: false
         run: |
-          echo HEAD commits ${{ github.event.pull_request.commits }}
+          echo Commits ${{ github.event.pull_request.commits }}
           if [ "${{ github.event.pull_request.commits }}" -ne 1 ]
           then
             echo "Number of commits in this PR is not 1"
@@ -61,9 +62,9 @@ jobs:
           fi
       - name: check number of changed files
         id: checkchangedfiles
-        continue-on-error: true
+        continue-on-error: false
         run: |
-          echo HEAD changed files ${{ github.event.pull_request.changed_files }}
+          echo Changed files ${{ github.event.pull_request.changed_files }}
           if [ "${{ github.event.pull_request.changed_files }}" -ne 1 ]
           then
             echo "Number of changed files in this PR is not 1"
@@ -86,9 +87,10 @@ jobs:
         id: runprog
         continue-on-error: true
         run: |
+          echo Running ./${{ github.event.pull_request.user.login }}.sh
           out=$(./${{ github.event.pull_request.user.login }}.sh)
-          [ $? -ne 0 ] && echo Could not run python3 "${{ github.event.pull_request.user.login }}.sh" && exit 1
-          echo $out
+          [ $? -ne 0 ] && echo Could not run ./"${{ github.event.pull_request.user.login }}.sh" && exit 1
+          echo Output:${out}
           [ "$out" != "Hello pull-request" ] && echo Incorrect output $out && exit 1
       - name: merge pull request
         run: |
