@@ -11,7 +11,7 @@ on:
       - reopened
       - unlocked
     paths:
-    - '*.py'
+    - '*.sh'
 #  pull_request_review:
 #    types:
 #      - submitted
