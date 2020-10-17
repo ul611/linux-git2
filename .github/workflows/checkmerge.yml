@@ -85,7 +85,7 @@ jobs:
           #description="${description//$'\r'/'%0D'}"
       - name: run programm
         id: runprog
-        continue-on-error: true
+        continue-on-error: false
         run: |
           echo Running ./${{ github.event.pull_request.user.login }}.sh
           out=$(./${{ github.event.pull_request.user.login }}.sh)
